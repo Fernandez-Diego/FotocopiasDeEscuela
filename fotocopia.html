@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fotocopias Escuela</title>
+  <meta name="theme-color" content="#2563eb">
+  <link rel="manifest" href="data:application/json;base64,ewogICJzaG9ydF9uYW1lIjogIkZvdG9jb3BpYXMiLAogICJuYW1lIjogIkZvdG9jb3BpYXMgRXNjdWVsYSIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZjNmNGY2IiwKICAidGhlbWVfY29sb3IiOiAiIzI1NjNlYiIKfQ==">
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: #f3f4f6; margin: 0; padding: 16px; color: #1f2937; }
+    .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    h1, h2 { margin-top: 0; }
+    label { font-weight: 600; display: block; margin-top: 8px; }
+    input, select, button { width: 100%; padding: 12px; margin-top: 4px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 16px; }
+    button { background: #2563eb; color: white; border: none; font-weight: bold; margin-top: 16px; cursor: pointer; }
+    button:active { background: #1d4ed8; }
+    .history-item { display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding: 8px 0; }
+    .total-box { font-size: 20px; font-weight: bold; text-align: center; color: #059669; }
+  </style>
+</head>
+<body>
+
+  <h1>🖨️ Fotocopias Escuela</h1>
+
+  <div class="card">
+    <h2>Nueva Venta</h2>
+    <label>Cantidad de copias</label>
+    <input type="number" id="cantidad" placeholder="Ej: 10" value="1" oninput="calcularTotal()">
+
+    <label>Precio por copia ($)</label>
+    <input type="number" id="precio" value="50" oninput="calcularTotal()">
+
+    <label>Método de Pago</label>
+    <select id="metodo">
+      <option value="Efectivo">💵 Efectivo</option>
+      <option value="Transferencia">📱 Transferencia</option>
+    </select>
+
+    <div class="total-box" id="totalMuestra" style="margin-top: 12px;">Total: $50</div>
+
+    <button onclick="registrarVenta()">REGISTRAR VENTA</button>
+  </div>
+
+  <div class="card">
+    <h2>Resumen del Día</h2>
+    <div id="resumen">Total: $0 (0 ventas)</div>
+    <div id="historial" style="margin-top: 12px;"></div>
+  </div>
+
+  <script>
+    let ventas = JSON.parse(localStorage.getItem('ventas_escuela') || '[]');
+
+    function calcularTotal() {
+      const cant = parseFloat(document.getElementById('cantidad').value) || 0;
+      const prec = parseFloat(document.getElementById('precio').value) || 0;
+      document.getElementById('totalMuestra').innerText = `Total: $${cant * prec}`;
+    }
+
+    function registrarVenta() {
+      const cant = parseFloat(document.getElementById('cantidad').value);
+      const prec = parseFloat(document.getElementById('precio').value);
+      const metodo = document.getElementById('metodo').value;
+
+      if (!cant || cant <= 0) return alert('Ingresá una cantidad válida');
+
+      const nuevaVenta = {
+        fecha: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        cantidad: cant,
+        total: cant * prec,
+        metodo: metodo
+      };
+
+      ventas.unshift(nuevaVenta);
+      localStorage.setItem('ventas_escuela', JSON.stringify(ventas));
+      document.getElementById('cantidad').value = '1';
+      calcularTotal();
+      actualizarVista();
+    }
+
+    function actualizarVista() {
+      const historialEl = document.getElementById('historial');
+      const resumenEl = document.getElementById('resumen');
+      historialEl.innerHTML = '';
+
+      let totalEfectivo = 0;
+      let totalTransf = 0;
+
+      ventas.forEach(v => {
+        if (v.metodo === 'Efectivo') totalEfectivo += v.total;
+        else totalTransf += v.total;
+
+        historialEl.innerHTML += `
+          <div class="history-item">
+            <span>${v.fecha} - ${v.cantidad} copias (${v.metodo})</span>
+            <strong>$${v.total}</strong>
+          </div>
+        `;
+      });
+
+      resumenEl.innerHTML = `
+        💵 Efectivo: <strong>$${totalEfectivo}</strong><br>
+        📱 Transferencia: <strong>$${totalTransf}</strong><br>
+        💰 Total general: <strong>$${totalEfectivo + totalTransf}</strong>
+      `;
+    }
+
+    actualizarVista();
+  </script>
+</body>
+</html>
