@@ -8,104 +8,281 @@
   <link rel="manifest" href="data:application/json;base64,ewogICJzaG9ydF9uYW1lIjogIkZvdG9jb3BpYXMiLAogICJuYW1lIjogIkZvdG9jb3BpYXMgRXNjdWVsYSIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZjNmNGY2IiwKICAidGhlbWVfY29sb3IiOiAiIzI1NjNlYiIKfQ==">
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-    body { background: #f3f4f6; margin: 0; padding: 16px; color: #1f2937; }
-    .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    h1, h2 { margin-top: 0; }
-    label { font-weight: 600; display: block; margin-top: 8px; }
+    body { background: #f3f4f6; margin: 0; padding: 12px; color: #1f2937; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+    h1, h2 { margin-top: 0; color: #111827; }
+    label { font-weight: 600; display: block; margin-top: 10px; font-size: 14px; color: #374151; }
     input, select, button { width: 100%; padding: 12px; margin-top: 4px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 16px; }
-    button { background: #2563eb; color: white; border: none; font-weight: bold; margin-top: 16px; cursor: pointer; }
-    button:active { background: #1d4ed8; }
-    .history-item { display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding: 8px 0; }
-    .total-box { font-size: 20px; font-weight: bold; text-align: center; color: #059669; }
+    .btn-primary { background: #2563eb; color: white; border: none; font-weight: bold; margin-top: 14px; cursor: pointer; font-size: 18px; padding: 14px; }
+    .btn-primary:active { background: #1d4ed8; }
+    .btn-share { background: #059669; color: white; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; }
+    .btn-group { display: flex; gap: 8px; margin-top: 8px; }
+    .btn-group button { flex: 1; margin-top: 0; }
+    .btn-tab { background: #e5e7eb; color: #374151; border: none; font-weight: 600; }
+    .btn-tab.active { background: #2563eb; color: white; }
+    .payment-btns { display: flex; gap: 10px; margin-top: 6px; }
+    .payment-btn { flex: 1; padding: 12px; border: 2px solid #d1d5db; background: #f9fafb; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; }
+    .payment-btn.selected { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+    .total-display { font-size: 24px; font-weight: 800; text-align: center; color: #059669; margin-top: 12px; background: #ecfdf5; padding: 10px; border-radius: 8px; }
+    .history-item { border-bottom: 1px solid #f3f4f6; padding: 10px 0; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .history-item:last-child { border-bottom: none; }
+    .history-info { flex-grow: 1; padding-right: 10px; }
+    .history-header { display: flex; justify-content: space-between; font-weight: bold; }
+    .history-sub { color: #6b7280; font-size: 12px; margin-top: 2px; }
+    .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    .badge-efectivo { background: #d1fae5; color: #065f46; }
+    .badge-transf { background: #dbeafe; color: #1e40af; }
+    .btn-delete { background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; padding: 8px 12px; font-size: 16px; width: auto; cursor: pointer; margin: 0; }
+    .btn-delete:active { background: #fca5a5; }
+    .summary-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-top: 10px; font-size: 15px; }
   </style>
 </head>
 <body>
 
   <h1>🖨️ Fotocopias Escuela</h1>
 
+  <!-- TARJETA NUEVA VENTA -->
   <div class="card">
-    <h2>Nueva Venta</h2>
-    <label>Cantidad de copias</label>
-    <input type="number" id="cantidad" placeholder="Ej: 10" value="1" oninput="calcularTotal()">
+    <h2>Registrar Venta</h2>
 
-    <label>Precio por copia ($)</label>
-    <input type="number" id="precio" value="50" oninput="calcularTotal()">
+    <label>Nombre Cliente / Referencia (Opcional)</label>
+    <input type="text" id="referencia" placeholder="Ej: Juan Pérez / Prof. García (Opcional)">
+
+    <label>Cantidad de Hojas/Copias</label>
+    <input type="number" id="cantidad" value="1" min="1" oninput="calcularTotal()">
+
+    <label>Precio por Hoja ($)</label>
+    <input type="number" id="precioHoja" value="200" oninput="calcularTotal()">
 
     <label>Método de Pago</label>
-    <select id="metodo">
-      <option value="Efectivo">💵 Efectivo</option>
-      <option value="Transferencia">📱 Transferencia</option>
-    </select>
+    <div class="payment-btns">
+      <div class="payment-btn selected" id="btnEfectivo" onclick="seleccionarMetodo('Efectivo')">💵 Efectivo</div>
+      <div class="payment-btn" id="btnTransf" onclick="seleccionarMetodo('Transferencia')">📱 Transferencia</div>
+    </div>
 
-    <div class="total-box" id="totalMuestra" style="margin-top: 12px;">Total: $50</div>
+    <div id="campoComprobante" style="display: none;">
+      <label>Número de comprobante (Opcional)</label>
+      <input type="text" id="comprobante" placeholder="Ej: 984512 (Opcional)">
+    </div>
 
-    <button onclick="registrarVenta()">REGISTRAR VENTA</button>
+    <div class="total-display" id="totalMuestra">Total: $200</div>
+
+    <button class="btn-primary" onclick="guardarVenta()">REGISTRAR VENTA</button>
   </div>
 
+  <!-- TARJETA INFORMES -->
   <div class="card">
-    <h2>Resumen del Día</h2>
-    <div id="resumen">Total: $0 (0 ventas)</div>
-    <div id="historial" style="margin-top: 12px;"></div>
+    <h2>Informes y Resumen</h2>
+    
+    <div class="btn-group">
+      <button class="btn-tab active" id="tabDia" onclick="cambiarFiltro('dia')">Diario</button>
+      <button class="btn-tab" id="tabSemana" onclick="cambiarFiltro('semana')">Semanal</button>
+      <button class="btn-tab" id="tabMes" onclick="cambiarFiltro('mes')">Mensual</button>
+    </div>
+
+    <div class="summary-box" id="resumenBox">Cargando informe...</div>
+
+    <button class="btn-share" onclick="compartirInforme()">📤 Compartir Informe</button>
+  </div>
+
+  <!-- TARJETA HISTORIAL -->
+  <div class="card">
+    <h2>Historial de Ventas</h2>
+    <input type="text" id="buscador" placeholder="🔍 Buscar por cliente o comprobante..." oninput="cargarHistorial()">
+    <div id="historialLista" style="margin-top: 12px;"></div>
   </div>
 
   <script>
-    let ventas = JSON.parse(localStorage.getItem('ventas_escuela') || '[]');
+    let db;
+    let metodoPago = 'Efectivo';
+    let filtroActual = 'dia';
+
+    const request = indexedDB.open("FotocopiasDB", 1);
+    request.onupgradeneeded = function(e) {
+      db = e.target.result;
+      if (!db.objectStoreNames.contains("ventas")) {
+        const store = db.createObjectStore("ventas", { keyPath: "id", autoIncrement: true });
+        store.createIndex("fecha", "fechaISO");
+      }
+    };
+    request.onsuccess = function(e) {
+      db = e.target.result;
+      cargarHistorial();
+    };
+
+    function seleccionarMetodo(metodo) {
+      metodoPago = metodo;
+      document.getElementById('btnEfectivo').classList.toggle('selected', metodo === 'Efectivo');
+      document.getElementById('btnTransf').classList.toggle('selected', metodo === 'Transferencia');
+      document.getElementById('campoComprobante').style.display = metodo === 'Transferencia' ? 'block' : 'none';
+    }
 
     function calcularTotal() {
       const cant = parseFloat(document.getElementById('cantidad').value) || 0;
-      const prec = parseFloat(document.getElementById('precio').value) || 0;
-      document.getElementById('totalMuestra').innerText = `Total: $${cant * prec}`;
+      const prec = parseFloat(document.getElementById('precioHoja').value) || 0;
+      document.getElementById('totalMuestra').innerText = `Total: $${(cant * prec).toLocaleString()}`;
     }
 
-    function registrarVenta() {
-      const cant = parseFloat(document.getElementById('cantidad').value);
-      const prec = parseFloat(document.getElementById('precio').value);
-      const metodo = document.getElementById('metodo').value;
+    function guardarVenta() {
+      const cantidad = parseInt(document.getElementById('cantidad').value);
+      const precioUnitario = parseFloat(document.getElementById('precioHoja').value);
+      const referencia = document.getElementById('referencia').value.trim();
+      const comprobante = document.getElementById('comprobante').value.trim();
 
-      if (!cant || cant <= 0) return alert('Ingresá una cantidad válida');
+      if (!cantidad || cantidad <= 0) return alert("Ingresá una cantidad válida");
 
-      const nuevaVenta = {
-        fecha: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        cantidad: cant,
-        total: cant * prec,
-        metodo: metodo
+      const ahora = new Date();
+      const dia = String(ahora.getDate()).padStart(2, '0');
+      const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+      const anio = ahora.getFullYear();
+
+      const venta = {
+        fechaISO: ahora.toISOString(),
+        fechaTexto: `${dia}/${mes}/${anio}`,
+        horaTexto: ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        referencia: referencia || 'Cliente General',
+        cantidad: cantidad,
+        precioUnitario: precioUnitario,
+        total: cantidad * precioUnitario,
+        metodo: metodoPago,
+        comprobante: metodoPago === 'Transferencia' ? comprobante : ''
       };
 
-      ventas.unshift(nuevaVenta);
-      localStorage.setItem('ventas_escuela', JSON.stringify(ventas));
-      document.getElementById('cantidad').value = '1';
-      calcularTotal();
-      actualizarVista();
+      const tx = db.transaction(["ventas"], "readwrite");
+      tx.objectStore("ventas").add(venta);
+      tx.oncomplete = function() {
+        document.getElementById('cantidad').value = '1';
+        document.getElementById('referencia').value = '';
+        document.getElementById('comprobante').value = '';
+        calcularTotal();
+        cargarHistorial();
+      };
     }
 
-    function actualizarVista() {
-      const historialEl = document.getElementById('historial');
-      const resumenEl = document.getElementById('resumen');
-      historialEl.innerHTML = '';
+    function eliminarVenta(id, detalle) {
+      const confirmar = confirm(`¿Estás seguro de eliminar esta venta?\n\n"${detalle}"`);
+      if (confirmar) {
+        const tx = db.transaction(["ventas"], "readwrite");
+        tx.objectStore("ventas").delete(id);
+        tx.oncomplete = function() {
+          cargarHistorial();
+        };
+      }
+    }
 
-      let totalEfectivo = 0;
-      let totalTransf = 0;
+    function cambiarFiltro(tipo) {
+      filtroActual = tipo;
+      document.getElementById('tabDia').classList.toggle('active', tipo === 'dia');
+      document.getElementById('tabSemana').classList.toggle('active', tipo === 'semana');
+      document.getElementById('tabMes').classList.toggle('active', tipo === 'mes');
+      cargarHistorial();
+    }
 
+    function cargarHistorial() {
+      if (!db) return;
+      const tx = db.transaction(["ventas"], "readonly");
+      const store = tx.objectStore("ventas");
+      const request = store.getAll();
+
+      request.onsuccess = function() {
+        let todas = request.result.reverse();
+        const busqueda = document.getElementById('buscador').value.toLowerCase();
+
+        if (busqueda) {
+          todas = todas.filter(v => 
+            v.referencia.toLowerCase().includes(busqueda) || 
+            v.comprobante.toLowerCase().includes(busqueda)
+          );
+        }
+
+        const ahora = new Date();
+        const ventasPeriodo = todas.filter(v => {
+          const f = new Date(v.fechaISO);
+          if (filtroActual === 'dia') return f.toDateString() === ahora.toDateString();
+          if (filtroActual === 'semana') {
+            const haceSieteDias = new Date();
+            haceSieteDias.setDate(ahora.getDate() - 7);
+            return f >= haceSieteDias;
+          }
+          if (filtroActual === 'mes') return f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear();
+        });
+
+        actualizarResumen(ventasPeriodo);
+        renderizarLista(todas);
+      };
+    }
+
+    function actualizarResumen(ventas) {
+      let totalEfectivo = 0, totalTransf = 0, totalCopias = 0;
       ventas.forEach(v => {
+        totalCopias += v.cantidad;
         if (v.metodo === 'Efectivo') totalEfectivo += v.total;
         else totalTransf += v.total;
-
-        historialEl.innerHTML += `
-          <div class="history-item">
-            <span>${v.fecha} - ${v.cantidad} copias (${v.metodo})</span>
-            <strong>$${v.total}</strong>
-          </div>
-        `;
       });
 
-      resumenEl.innerHTML = `
-        💵 Efectivo: <strong>$${totalEfectivo}</strong><br>
-        📱 Transferencia: <strong>$${totalTransf}</strong><br>
-        💰 Total general: <strong>$${totalEfectivo + totalTransf}</strong>
+      const totalGral = totalEfectivo + totalTransf;
+
+      const ahora = new Date();
+      const dia = String(ahora.getDate()).padStart(2, '0');
+      const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+      const anio = ahora.getFullYear();
+      const fechaHoyFormateada = `${dia}/${mes}/${anio}`;
+
+      let encabezadoInforme = '';
+      if (filtroActual === 'dia') {
+        encabezadoInforme = `Informe de hoy ${fechaHoyFormateada}:`;
+      } else if (filtroActual === 'semana') {
+        encabezadoInforme = `Informe de los Últimos 7 Días:`;
+      } else {
+        encabezadoInforme = `Informe del Mes (${mes}/${anio}):`;
+      }
+
+      document.getElementById('resumenBox').innerHTML = `
+        <strong>${encabezadoInforme}</strong><br>
+        📄 Total de Hojas: <strong>${totalCopias.toLocaleString()}</strong><br>
+        💵 Efectivo: <strong>$${totalEfectivo.toLocaleString()}</strong><br>
+        📱 Transferencias: <strong>$${totalTransf.toLocaleString()}</strong><br>
+        💰 Total General: <strong style="color:#059669;">$${totalGral.toLocaleString()}</strong>
       `;
     }
 
-    actualizarVista();
+    function renderizarLista(ventas) {
+      const contenedor = document.getElementById('historialLista');
+      if (ventas.length === 0) {
+        contenedor.innerHTML = '<div style="color:#9ca3af; text-align:center; padding:12px;">No hay registros</div>';
+        return;
+      }
+
+      contenedor.innerHTML = ventas.map(v => `
+        <div class="history-item">
+          <div class="history-info">
+            <div class="history-header">
+              <span>${v.referencia}</span>
+              <span>$${v.total.toLocaleString()}</span>
+            </div>
+            <div class="history-sub">
+              ${v.fechaTexto} ${v.horaTexto} | ${v.cantidad} hojas
+              <span class="badge ${v.metodo === 'Efectivo' ? 'badge-efectivo' : 'badge-transf'}">
+                ${v.metodo}${v.comprobante ? ' #' + v.comprobante : ''}
+              </span>
+            </div>
+          </div>
+          <button class="btn-delete" title="Eliminar Venta" onclick="eliminarVenta(${v.id}, '${v.referencia} - $${v.total}')">🗑️</button>
+        </div>
+      `).join('');
+    }
+
+    function compartirInforme() {
+      const resumenText = document.getElementById('resumenBox').innerText;
+      const texto = `📊 *INFORME FOTOCOPIAS ESCUELA*\n\n${resumenText}`;
+
+      if (navigator.share) {
+        navigator.share({ title: 'Informe Fotocopias', text: texto });
+      } else {
+        navigator.clipboard.writeText(texto);
+        alert('Informe copiado al portapapeles');
+      }
+    }
   </script>
 </body>
 </html>
